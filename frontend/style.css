@@ -1340,3 +1340,191 @@ a:hover {
     font-size: 0.82rem;
   }
 }
+
+/* ================================================================
+   QR CODE BUTTON (nav)
+   ================================================================ */
+.nav-qr-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: none;
+  border: 1px solid var(--bc-border);
+  border-radius: 22px;
+  color: var(--bc-text-muted);
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition);
+}
+.nav-qr-btn:hover {
+  border-color: var(--bc-primary);
+  color: var(--bc-primary);
+}
+
+/* ================================================================
+   QR CODE MODAL
+   ================================================================ */
+.qr-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+.qr-overlay.hidden {
+  display: none;
+}
+
+.qr-modal {
+  background: var(--bc-card);
+  border: 1px solid var(--bc-border);
+  border-radius: 20px;
+  padding: 32px 36px;
+  width: 100%;
+  max-width: 380px;
+  position: relative;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.qr-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--bc-surface);
+  border: none;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--bc-text-muted);
+  transition: color var(--transition), background var(--transition);
+}
+.qr-close-btn:hover {
+  color: #fff;
+  background: var(--bc-border);
+}
+
+.qr-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.qr-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 2px;
+}
+
+.qr-subtitle {
+  font-size: 0.78rem;
+  color: var(--bc-text-muted);
+  margin: 0;
+}
+
+.qr-code-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.qr-code-wrap {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  display: inline-block;
+  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.15);
+}
+
+/* qrcodejs renders a table or canvas — make sure it's block */
+.qr-code-wrap canvas,
+.qr-code-wrap img {
+  display: block;
+  border-radius: 4px;
+}
+
+.qr-url-text {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--bc-text-muted);
+  margin-bottom: 20px;
+  word-break: break-all;
+}
+
+.qr-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.qr-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all var(--transition);
+  border: none;
+}
+
+.qr-download-btn {
+  background: var(--bc-primary);
+  color: #111;
+}
+.qr-download-btn:hover {
+  background: #e6c200;
+}
+
+.qr-copy-btn {
+  background: var(--bc-surface);
+  color: var(--bc-text);
+  border: 1px solid var(--bc-border);
+}
+.qr-copy-btn:hover {
+  border-color: var(--bc-primary);
+  color: var(--bc-primary);
+}
+
+.qr-hint {
+  text-align: center;
+  font-size: 0.72rem;
+  color: #555;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .qr-modal {
+    padding: 24px 20px;
+  }
+  .nav-qr-btn span {
+    display: none;
+  }
+  .nav-qr-btn {
+    padding: 8px 10px;
+  }
+}
