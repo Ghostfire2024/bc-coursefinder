@@ -1,0 +1,291 @@
+{
+    "courses": [
+        {
+          "name": "Advanced Diploma in Cybersecurity",
+          "description": "Advanced Diploma in Cybersecurity. NQF Level 7 - 120 credits. Duration: 1 year. offered by Belgium Campus iTversity, a specialist higher education institution with campuses in Pretoria, Kempton Park, and Stellenbosch.",
+          "requirements": [ "Relevant 3-year Diploma or Degree in IT" ],
+          "careers": [
+            "Cybersecurity Analyst",
+            "Information Security Officer",
+            "Penetration Tester",
+            "Security Consultant",
+            "SOC Analyst"
+          ],
+          "skills": [
+            "Network Security",
+            "Ethical Hacking",
+            "Risk Assessment",
+            "Incident Response",
+            "Security Auditing",
+            "Cryptography"
+          ],
+          "duration": "1 year",
+          "nqf_level": 7,
+          "credits": 120,
+          "saqa_id": "124166",
+          "url": "https://www.belgiumcampus.ac.za/advanced-diploma-in-cybersecurity/"
+        },
+        {
+          "name": "Bachelor of Computing Degree",
+          "description": "Bachelor of Computing Degree. Duration: 4 years - offered by Belgium Campus iTversity, a specialist higher education institution with campuses in Pretoria, Kempton Park, and Stellenbosch.",
+          "requirements": [
+            "National Senior Certificate (NSC) with Degree Entry",
+            "50% or more for Pure Mathematics",
+            "50% or more for English"
+          ],
+          "careers": [
+            "Software Engineer",
+            "Systems Architect",
+            "DevOps Engineer",
+            "Cloud Engineer",
+            "Research Scientist",
+            "AI Developer",
+            "Data Scientist"
+          ],
+          "skills": [
+            "Programming",
+            "Software Design",
+            "Database Management",
+            "Web Development",
+            "Problem Solving",
+            "Agile Methodologies",
+            "Data Analysis",
+            "Machine Learning",
+            "Statistical Modelling",
+            "Python Programming",
+            "Data Visualisation",
+            "Algorithm Design",
+            "Systems Architecture",
+            "Cloud Computing"
+          ],
+          "duration": "4 years",
+          "nqf_level": 8,
+          "credits": 506,
+          "min_maths": 50,
+          "math_type": "Pure Mathematics",
+          "entry_level": "Degree",
+          "saqa_id": "62689",
+          "url": "https://www.belgiumcampus.ac.za/bachelor-of-computing/"
+        },
+        {
+          "name": "Bachelor of Information Technology",
+          "description": "Bachelor of Information Technology. Duration: 3 years - offered by Belgium Campus iTversity, a specialist higher education institution with campuses in Pretoria, Kempton Park, and Stellenbosch.",
+          "requirements": [
+            "National Senior Certificate (NSC)",
+            "50% or more for Pure Mathematics",
+            "50% or more for English"
+          ],
+          "careers": [
+            "IT Support Specialist",
+            "Systems Administrator",
+            "IT Project Manager",
+            "IT Consultant",
+            "Database Administrator",
+            "Full-stack Developer",
+            "Systems Analyst"
+          ],
+          "skills": [
+            "Programming",
+            "Software Design",
+            "Database Management",
+            "Web Development",
+            "Problem Solving",
+            "Agile Methodologies",
+            "Networking",
+            "Systems Analysis",
+            "IT Support"
+          ],
+          "duration": "3 years",
+          "nqf_level": 7,
+          "credits": 360,
+          "min_maths": 50,
+          "math_type": "Pure Mathematics",
+          "entry_level": "Degree",
+          "saqa_id": "94121",
+          "url": "https://www.belgiumcampus.ac.za/bachelor-of-information-technology/"
+        },
+        {
+          "name": "Maths Bridging Course",
+          "description": "Do you want to study for an IT degree but don't quite meet the necessary admission requirements? This Maths Bridging Course is for you!",
+          "requirements": [ "National Senior Certificate (NSC)" ],
+          "careers": [ "Pathway to IT Diploma or Degree programmes" ],
+          "skills": [
+            "Foundational Mathematics",
+            "Basic Programming",
+            "Computer Literacy",
+            "Study Skills"
+          ],
+          "nqf_level": null,
+          "duration": "1 year",
+          "entry_level": "Foundation",
+          "url": "https://www.belgiumcampus.ac.za/bridging-course/"
+        },
+        {
+          "name": "IT Diploma for Deaf and Hard of Hearing",
+          "description": "Our Diploma in Information Technology is spread over 4 years for our Deaf students and allows them to specialise in Software Development. Apply online today.",
+          "requirements": [
+            "National Senior Certificate (NSC)",
+            "50% or more for the Belgium Campus Aptitude Test",
+            "An audiogram no older than 6 months",
+            "A South African ID"
+          ],
+          "careers": [
+            "Software Developer",
+            "Web Developer",
+            "Junior Programmer",
+            "IT Support Specialist",
+            "Database Administrator"
+          ],
+          "skills": [
+            "Programming",
+            "Software Design",
+            "Database Management",
+            "Web Development",
+            "Problem Solving",
+            "Agile Methodologies",
+            "Networking",
+            "Systems Analysis",
+            "IT Support",
+            "Software Development"
+          ],
+          "duration": "4 years",
+          "nqf_level": 6,
+          "credits": 360,
+          "entry_level": "Diploma",
+          "streams": "Software Development",
+          "saqa_id": "120097",
+          "url": "https://www.belgiumcampus.ac.za/diploma-for-deaf-students/"
+        },
+        {
+          "name": "Diploma in IT",
+          "description": "A 3 year NQF Level 6 Qualification featuring 2.5 years of study and 6-months internship. Students choose between Infrastructure and Software Development Streams, a specialist higher education institution with campuses in Pretoria, Kempton Park, and Stellenbosch.",
+          "requirements": [
+            "National Senior Certificate (NSC) with Diploma Entry",
+            "Mathematics or Mathematical Literacy"
+          ],
+          "careers": [
+            "IT Support Specialist",
+            "Junior Software Developer",
+            "Web Developer",
+            "Database Administrator",
+            "Network Technician",
+            "Cloud Engineer",
+            "Network Specialist"
+          ],
+          "skills": [
+            "Programming",
+            "Networking",
+            "Database Management",
+            "Web Development",
+            "IT Support"
+          ],
+          "duration": "3 years",
+          "nqf_level": 6,
+          "credits": 360,
+          "min_maths": 30,
+          "math_type": "Mathematics or Mathematical Literacy",
+          "entry_level": "Diploma",
+          "streams": ["Infrastructure", "Software Development"],
+          "saqa_id": "120097",
+          "url": "https://www.belgiumcampus.ac.za/diploma-in-information-technology/"
+        },
+        {
+          "name": "Master of Information Technology",
+          "description": "Master of Information Technology. NQF Level 9 - 180 credits. Duration: 2 years. offered by Belgium Campus iTversity, a specialist higher education institution with campuses in Pretoria, Kempton Park, and Stellenbosch.",
+          "requirements": [ "National Senior Certificate (NSC)" ],
+          "careers": [
+            "IT Support Specialist",
+            "Systems Administrator",
+            "IT Project Manager",
+            "IT Consultant",
+            "Database Administrator",
+            "IT Researcher",
+            "Academic Lecturer",
+            "IT Director",
+            "Chief Technology Officer (CTO)",
+            "Technology Consultant"
+          ],
+          "skills": [
+            "Programming",
+            "Networking",
+            "Database Management",
+            "Systems Analysis",
+            "IT Support",
+            "Research Methodology",
+            "Critical Analysis",
+            "Technical Writing",
+            "Innovation",
+            "IT Leadership"
+          ],
+          "nqf_level": 9,
+          "credits": 180,
+          "duration": "2 years",
+          "saqa_id": "125001",
+          "url": "https://www.belgiumcampus.ac.za/master-of-information-technology/"
+        },
+        {
+          "name": "Part-Time Bachelor of Information Technology",
+          "description": "Part-Time Bachelor of Information Technology. Duration: 5 years - offered by Belgium Campus iTversity, a specialist higher education institution with campuses in Pretoria, Kempton Park, and Stellenbosch.",
+          "requirements": [
+            "National Senior Certificate (NSC)",
+            "50% or more for Pure Mathematics",
+            "50% or more for English"
+          ],
+          "careers": [
+            "IT Support Specialist",
+            "Systems Administrator",
+            "IT Project Manager",
+            "IT Consultant",
+            "Database Administrator"
+          ],
+          "skills": [
+            "Programming",
+            "Networking",
+            "Database Management",
+            "Systems Analysis",
+            "IT Support"
+          ],
+          "duration": "5 years",
+          "nqf_level": 7,
+          "credits": 360,
+          "min_maths": 50,
+          "math_type": "Pure Mathematics",
+          "entry_level": "Degree",
+          "saqa_id": "94121",
+          "url": "https://www.belgiumcampus.ac.za/part-time-bachelor-of-information-technology/"
+        },
+        {
+          "name": "Postgraduate Diploma in Cybersecurity Risk Management",
+          "description": "Postgraduate Diploma in Cybersecurity Risk Management. NQF Level 8 - 120 credits. Duration: 1 year. offered by Belgium Campus iTversity, a specialist higher education institution with campuses in Pretoria, Kempton Park, and Stellenbosch.",
+          "requirements": [ "Relevant NQF Level 7 qualification (Degree or Advanced Diploma)" ],
+          "careers": [
+            "Cybersecurity Analyst",
+            "Information Security Officer",
+            "Penetration Tester",
+            "Security Consultant",
+            "SOC Analyst",
+            "Cybersecurity Risk Manager",
+            "IT Governance Specialist",
+            "Compliance Officer",
+            "Chief Information Security Officer (CISO)"
+          ],
+          "skills": [
+            "Network Security",
+            "Ethical Hacking",
+            "Risk Assessment",
+            "Incident Response",
+            "Security Auditing",
+            "Cryptography",
+            "IT Governance",
+            "Compliance Management",
+            "Security Policy Development",
+            "Business Continuity Planning"
+          ],
+          "nqf_level": 8,
+          "credits": 120,
+          "duration": "1 year",
+          "saqa_id": "123435",
+          "url": "https://www.belgiumcampus.ac.za/postgraduate-diploma-in-cybersecurity-risk-management/"
+        }
+    ]
+}

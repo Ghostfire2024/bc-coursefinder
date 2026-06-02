@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment variables — never commit secrets
+.env
+.env.local
+.env*.local
+backend/.env
+functions/.env
+
+# Vercel
+.vercel/
+
+# Firebase
+.firebase/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Users data (contains hashed passwords)
+backend/users.json
+functions/users.json
