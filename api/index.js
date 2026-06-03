@@ -161,17 +161,6 @@ function formatCourses(courses) {
     return t;
   }).join("\n");
 }
-const GREETING_RE = /^(hello|hi|hey|howzit|sup|yo|good morning|good afternoon|good evening|hola|greetings|what'?s up|wassup|hiya|heya)[\s!?.]*$/i;
-
-function fallback(msg, courses) {
-  const l = msg.toLowerCase();
-  if (l.includes("math lit") || l.includes("mathematical literacy") || l.includes("maths lit"))
-    return `So with Maths Literacy you've still got a solid option — the **Diploma in IT** (3 years) covers programming, networking, web dev, all of that. If you're aiming for a degree down the line, the **Maths Bridging Course** is the route there. Want me to break down what each one involves?`;
-  if (courses.length)
-    return `Here are a few programmes that might be relevant:\n\n` + courses.slice(0,3).map((c) => `**${c.name}**${c.duration ? ` (${c.duration})` : ""}`).join("\n") + `\n\nWant more detail on any of these — requirements, careers, what it's actually like? Just ask.`;
-  return `Hey! I'm here to help you find the right IT course at Belgium Campus. What do you want to know — entry requirements, career options, how the courses compare? Fire away.`;
-}
-
 // ================================================================
 // ROUTES
 // ================================================================
@@ -182,32 +171,23 @@ app.post("/api/chat", async (req, res) => {
     if (!message?.trim()) return res.status(400).json({ error: "Message is required." });
     const msg = message.trim();
 
-    // Handle greetings directly — no need to hit Gemini
-    if (GREETING_RE.test(msg)) {
-      const greetings = [
-        "Hey! 😊 So what are you trying to figure out — which course to study, what the entry requirements are, or what kind of IT career you'd enjoy?",
-        "Hi there! Good to have you here. Are you exploring courses for next year, or trying to figure out which IT path suits you?",
-        "Hey! What's on your mind — course requirements, career options, or something else?",
-      ];
-      return res.json({ reply: greetings[Math.floor(msg.length % greetings.length)], sources: [] });
+    // Always send to Gemini — let the system prompt enforce rules and tone
+    const courses = filterCourses(msg); // may be empty; formatCourses falls back to all courses
+    const sources = courses.slice(0, 5).map((c) => c.name);
+
+    if (!geminiModel) {
+      return res.json({ reply: "I'm having trouble connecting right now. Try again in a moment!", sources });
     }
 
-    if (!isOnTopic(msg)) return res.json({ reply: "Ah, that's a bit outside my lane — I'm only clued up on IT courses at Belgium Campus. Ask me anything about those though! 😊", sources: [] });
-
-    const courses = filterCourses(msg);
-    const sources = courses.slice(0,5).map((c) => c.name);
-    if (!geminiModel) return res.json({ reply: fallback(msg, courses), sources });
-
     const ctx = formatCourses(courses);
-    const hist = history.slice(-10).map((h) => `${h.role==="user"?"Student":"Assistant"}: ${h.content}`).join("\n");
-    const prompt = `${SYSTEM_PROMPT}\n\nAVAILABLE COURSE DATA:\n${ctx}${hist ? `\n\nRECENT CONVERSATION:\n${hist}` : ""}\n\nSTUDENT'S QUESTION: ${msg}\n\nReply like you're chatting with a friend — casual, warm, real. Use the course data above only. If this is a follow-up, pick up naturally from where things left off. Include URLs for any courses you recommend.`;
+    const hist = history.slice(-10).map((h) => `${h.role === "user" ? "Student" : "Assistant"}: ${h.content}`).join("\n");
+    const prompt = `${SYSTEM_PROMPT}\n\nAVAILABLE COURSE DATA:\n${ctx}${hist ? `\n\nRECENT CONVERSATION:\n${hist}` : ""}\n\nSTUDENT'S MESSAGE: ${msg}\n\nReply like you're chatting with a friend — casual, warm, real. Never list your own capabilities. If they just said hello, just say hi back and ask one question to get the conversation going.`;
 
     const result = await geminiModel.generateContent(prompt);
     return res.json({ reply: result.response.text(), sources });
   } catch (err) {
     console.error("[CHAT]", err.message);
-    const courses = filterCourses(req.body?.message || "");
-    return res.json({ reply: fallback(req.body?.message||"", courses), sources: [], fallback: true });
+    return res.json({ reply: "Something went wrong on my end — try sending that again!", sources: [], fallback: true });
   }
 });
 

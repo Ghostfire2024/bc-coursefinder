@@ -458,92 +458,36 @@ app.post("/api/chat", async (req, res) => {
     const userMessage = message.trim();
     console.log(`[CHAT] User: "${userMessage}"`);
 
-    // Handle greetings directly — no need to hit Gemini
-    if (GREETING_RE.test(userMessage)) {
-      const greetings = [
-        "Hey! 😊 So what are you trying to figure out — which course to study, what the entry requirements are, or what kind of IT career you'd enjoy?",
-        "Hi there! Good to have you here. Are you exploring courses for next year, or trying to figure out which IT path suits you?",
-        "Hey! What's on your mind — course requirements, career options, or something else?",
-      ];
-      return res.json({ reply: greetings[Math.floor(userMessage.length % greetings.length)], sources: [] });
-    }
-
-    // Step 1: Check if the question is on-topic
-    if (!isOnTopic(userMessage)) {
-      console.log("[CHAT] Off-topic question detected");
-      return res.json({
-        reply: "Ah, that's a bit outside my lane — I'm only clued up on IT courses at Belgium Campus. Ask me anything about those though! 😊",
-        sources: [],
-      });
-    }
-
-    // Step 2: Filter relevant courses using keyword matching
+    // Always send to Gemini — let the system prompt handle rules and tone
     const relevantCourses = filterRelevantCourses(userMessage);
-    console.log(
-      `[CHAT] Found ${relevantCourses.length} relevant courses`
-    );
-
-    // Step 3: Build source list for transparency
     const sources = relevantCourses.slice(0, 5).map((c) => c.name);
 
-    // Step 4: If Gemini is not available, use fallback
     if (!geminiModel) {
-      console.log("[CHAT] Using fallback response (no Gemini key)");
-      return res.json({
-        reply: generateFallbackResponse(userMessage, relevantCourses),
-        sources,
-      });
+      return res.json({ reply: "I'm having trouble connecting right now. Try again in a moment!", sources });
     }
 
-    // Step 5: Build the prompt with filtered course data
     const courseContext = formatCoursesForPrompt(relevantCourses);
-
-    // Build conversation history for context (last 10 messages)
     const recentHistory = history.slice(-10);
-    let conversationContext = "";
-    if (recentHistory.length > 0) {
-      conversationContext =
-        "\n\nRECENT CONVERSATION:\n" +
-        recentHistory
-          .map(
-            (h) =>
-              `${h.role === "user" ? "Student" : "Assistant"}: ${h.content}`
-          )
-          .join("\n");
-    }
+    const conversationContext = recentHistory.length
+      ? "\n\nRECENT CONVERSATION:\n" + recentHistory.map((h) => `${h.role === "user" ? "Student" : "Assistant"}: ${h.content}`).join("\n")
+      : "";
 
-    // Combine system prompt + course data + conversation + user query
     const fullPrompt = `${SYSTEM_PROMPT}
 
 AVAILABLE COURSE DATA:
 ${courseContext}
 ${conversationContext}
 
-STUDENT'S QUESTION: ${userMessage}
+STUDENT'S MESSAGE: ${userMessage}
 
-Reply like you're chatting with a friend — casual, warm, real. Use the course data above only. If this is a follow-up, pick up naturally from where things left off. Include URLs for any courses you recommend.`;
+Reply like you're chatting with a friend — casual, warm, real. Never list your own capabilities. If they just said hello, just say hi back and ask one question to get the conversation going.`;
 
-    // Step 6: Send to Gemini
     console.log("[CHAT] Sending to Gemini...");
     const result = await geminiModel.generateContent(fullPrompt);
-    const reply = result.response.text();
-
-    console.log("[CHAT] Gemini response received");
-
-    return res.json({ reply, sources });
+    return res.json({ reply: result.response.text(), sources });
   } catch (err) {
     console.error("[ERROR] Chat endpoint failed:", err.message);
-
-    // Provide a helpful fallback instead of crashing
-    const relevantCourses = filterRelevantCourses(req.body?.message || "");
-    return res.json({
-      reply: generateFallbackResponse(
-        req.body?.message || "",
-        relevantCourses
-      ),
-      sources: [],
-      fallback: true,
-    });
+    return res.json({ reply: "Something went wrong on my end — try sending that again!", sources: [], fallback: true });
   }
 });
 
