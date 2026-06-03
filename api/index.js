@@ -9,7 +9,7 @@ const cors    = require("cors");
 const path    = require("path");
 const fs      = require("fs");
 
-const { GoogleGenAI } = require("@google/genai");
+const Groq = require("groq-sdk");
 const bcrypt = require("bcryptjs");
 const jwt    = require("jsonwebtoken");
 
@@ -57,11 +57,9 @@ try {
 // ================================================================
 // GEMINI
 // ================================================================
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-let genAI = null;
-if (GEMINI_API_KEY && GEMINI_API_KEY !== "YOUR_GEMINI_API_KEY_HERE") {
-  genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-}
+const groq = process.env.GROQ_API_KEY
+  ? new Groq({ apiKey: process.env.GROQ_API_KEY })
+  : null;
 
 // ================================================================
 // SYSTEM PROMPT
@@ -171,29 +169,41 @@ app.post("/api/chat", async (req, res) => {
     const courses = filterCourses(msg);
     const sources = courses.slice(0, 5).map((c) => c.name);
 
-    if (!genAI) {
+    if (!groq) {
       return res.json({ reply: "I'm having trouble connecting right now. Try again in a moment!", sources });
     }
 
-    // Only inject course data when something specific was asked — avoids Gemini listing all courses for greetings
+    // Only inject course data when something specific was asked
     const ctx = courses.length > 0 ? `\n\nAVAILABLE COURSE DATA:\n${formatCourses(courses)}` : "";
-    const hist = history.slice(-10).map((h) => `${h.role === "user" ? "Student" : "Assistant"}: ${h.content}`).join("\n");
-    const prompt = `${SYSTEM_PROMPT}${ctx}${hist ? `\n\nRECENT CONVERSATION:\n${hist}` : ""}\n\nSTUDENT'S MESSAGE: ${msg}\n\nReply like you're chatting with a friend — casual, warm, real. Never list your own capabilities unprompted. If they just greeted you, greet them back in one sentence and ask one natural question.`;
+    const systemContent = `${SYSTEM_PROMPT}${ctx}\n\nReply like you're chatting with a friend — casual, warm, real. Never list your own capabilities unprompted. If they just greeted you, greet them back in one sentence and ask one natural question.`;
 
-    const result = await genAI.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: prompt,
-      config: { temperature: 0.85, maxOutputTokens: 4096, topP: 0.95 },
+    // Build message array with conversation history
+    const messages = [
+      { role: "system", content: systemContent },
+      ...history.slice(-10).map((h) => ({
+        role: h.role === "user" ? "user" : "assistant",
+        content: h.content,
+      })),
+      { role: "user", content: msg },
+    ];
+
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages,
+      temperature: 0.85,
+      max_tokens: 4096,
+      top_p: 0.95,
     });
-    return res.json({ reply: result.text, sources });
+
+    return res.json({ reply: completion.choices[0].message.content, sources });
   } catch (err) {
     console.error("[CHAT]", err.message);
-    return res.json({ reply: "Something went wrong on my end — try sending that again!", error: err.message, sources: [], fallback: true });
+    return res.json({ reply: "Something went wrong on my end — try sending that again!", sources: [], fallback: true });
   }
 });
 
 app.get("/api/data",   (req, res) => res.json(courseData));
-app.get("/api/health", (req, res) => res.json({ status: "ok", courses: courseData.courses.length, gemini: !!genAI }));
+app.get("/api/health", (req, res) => res.json({ status: "ok", courses: courseData.courses.length, groq: !!groq }));
 
 app.post("/api/register", async (req, res) => {
   try {

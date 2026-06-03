@@ -16,7 +16,7 @@ const path = require("path");
 const fs = require("fs");
 require("dotenv").config();
 
-const { GoogleGenAI } = require("@google/genai");
+const Groq = require("groq-sdk");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -82,15 +82,12 @@ try {
 // ================================================================
 // GEMINI AI SETUP
 // ================================================================
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-let genAI = null;
+const groq = process.env.GROQ_API_KEY
+  ? new Groq({ apiKey: process.env.GROQ_API_KEY })
+  : null;
 
-if (GEMINI_API_KEY && GEMINI_API_KEY !== "YOUR_GEMINI_API_KEY_HERE") {
-  genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-  console.log("[AI] Gemini initialized successfully");
-} else {
-  console.warn("[AI] No Gemini API key found. Set GEMINI_API_KEY in .env file.");
-}
+if (groq) console.log("[AI] Groq initialized successfully");
+else console.warn("[AI] No GROQ_API_KEY found. Set it in .env file.");
 
 // ================================================================
 // SYSTEM PROMPT - Controls AI behaviour strictly
@@ -451,7 +448,7 @@ app.post("/api/chat", async (req, res) => {
     const relevantCourses = filterRelevantCourses(userMessage);
     const sources = relevantCourses.slice(0, 5).map((c) => c.name);
 
-    if (!genAI) {
+    if (!groq) {
       return res.json({ reply: "I'm having trouble connecting right now. Try again in a moment!", sources });
     }
 
@@ -464,19 +461,27 @@ app.post("/api/chat", async (req, res) => {
       ? "\n\nRECENT CONVERSATION:\n" + recentHistory.map((h) => `${h.role === "user" ? "Student" : "Assistant"}: ${h.content}`).join("\n")
       : "";
 
-    const fullPrompt = `${SYSTEM_PROMPT}${courseContext}${conversationContext}
+    console.log("[CHAT] Sending to Groq...");
+    const systemContent = `${SYSTEM_PROMPT}${courseContext}\n\nReply like you're chatting with a friend — casual, warm, real. Never list your own capabilities unprompted. If they just greeted you, greet them back in one sentence and ask one natural question.`;
 
-STUDENT'S MESSAGE: ${userMessage}
+    const messages = [
+      { role: "system", content: systemContent },
+      ...recentHistory.map((h) => ({
+        role: h.role === "user" ? "user" : "assistant",
+        content: h.content,
+      })),
+      { role: "user", content: userMessage },
+    ];
 
-Reply like you're chatting with a friend — casual, warm, real. Never list your own capabilities unprompted. If they just greeted you, greet them back in one sentence and ask one natural question.`;
-
-    console.log("[CHAT] Sending to Gemini...");
-    const result = await genAI.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: fullPrompt,
-      config: { temperature: 0.85, maxOutputTokens: 4096, topP: 0.95 },
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages,
+      temperature: 0.85,
+      max_tokens: 4096,
+      top_p: 0.95,
     });
-    return res.json({ reply: result.text, sources });
+
+    return res.json({ reply: completion.choices[0].message.content, sources });
   } catch (err) {
     console.error("[ERROR] Chat endpoint failed:", err.message);
     return res.json({ reply: "Something went wrong on my end — try sending that again!", sources: [], fallback: true });
@@ -576,7 +581,7 @@ app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
     courses: courseData.courses.length,
-    gemini: !!genAI,
+    groq: !!groq,
     timestamp: new Date().toISOString(),
   });
 });
