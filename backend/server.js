@@ -415,44 +415,26 @@ function formatCoursesForPrompt(courses) {
 // ================================================================
 // FALLBACK RESPONSE (when Gemini is unavailable)
 // ================================================================
+const GREETING_RE = /^(hello|hi|hey|howzit|sup|yo|good morning|good afternoon|good evening|hola|greetings|what'?s up|wassup|hiya|heya)[\s!?.]*$/i;
+
 function generateFallbackResponse(message, relevantCourses) {
   const lower = message.toLowerCase();
 
-  // Math literacy question
-  if (
-    lower.includes("math lit") ||
-    lower.includes("mathematical literacy") ||
-    lower.includes("maths lit")
-  ) {
-    return `Great question! With Mathematical Literacy, you can apply for:\n\n• **Diploma in IT** (3 years) - A practical qualification covering programming, networking, and web development.\n• **Maths Bridging Course** - If you want to upgrade to qualify for a degree programme.\n• **IT Diploma for Deaf and Hard of Hearing** (4 years) - Specialising in Software Development.\n\nFor degree programmes (Bachelor's), you'll typically need pure Mathematics. But don't worry - the Bridging Course can help you get there!\n\nVisit belgiumcampus.ac.za for full admission details.`;
-  }
+  if (lower.includes("math lit") || lower.includes("mathematical literacy") || lower.includes("maths lit"))
+    return `So with Maths Literacy you've still got a solid option — the **Diploma in IT** (3 years) covers programming, networking, web dev, all of that. If you're aiming for a degree down the line, the **Maths Bridging Course** is the route there. Want me to break down what each one involves?`;
 
-  // Comparison question
-  if (
-    lower.includes("difference") ||
-    lower.includes("compare") ||
-    lower.includes("diploma") && lower.includes("degree")
-  ) {
-    return `Here's a quick comparison:\n\n**Diploma in IT (NQF 6)**\n• Duration: 3 years\n• More practical, hands-on focus\n• Can accept Mathematical Literacy\n• Careers: IT Support, Junior Developer, Web Developer\n\n**Bachelor of IT (NQF 7)**\n• Duration: 3 years (or 5 years part-time)\n• More theoretical depth + specialisation\n• Requires Mathematics\n• Careers: IT Project Manager, Systems Administrator, IT Consultant\n\n**Bachelor of Computing (NQF 7)**\n• Duration: 3 years\n• Specialise in Software Engineering or Data Science\n• Careers: Software Engineer, Cloud Engineer, DevOps Engineer\n\nBoth diplomas and degrees lead to great IT careers!`;
-  }
+  if (lower.includes("difference") || lower.includes("compare") || (lower.includes("diploma") && lower.includes("degree")))
+    return `Good question! The short version: the **Diploma in IT** (NQF 6, 3 years) is more hands-on and practical — you can even get in with Maths Literacy. The **Bachelor of IT** (NQF 7, 3 years) goes deeper and opens more doors career-wise, but you need Pure Maths at 50%+. The **Bachelor of Computing** (NQF 8, 4 years) is the top one — think software engineering, data science, AI. Which of these sounds like it fits you better?`;
 
-  // If we have relevant courses, format a simple response
   if (relevantCourses.length > 0) {
-    let response = `Based on your question, here are relevant Belgium Campus programmes:\n\n`;
+    let r = `Here are a few programmes worth looking at:\n\n`;
     relevantCourses.slice(0, 3).forEach((c) => {
-      response += `**${c.name}**`;
-      if (c.duration) response += ` (${c.duration})`;
-      response += `\n`;
-      if (c.careers?.length) {
-        response += `Careers: ${c.careers.slice(0, 3).join(", ")}\n`;
-      }
-      response += `\n`;
+      r += `**${c.name}**${c.duration ? ` (${c.duration})` : ""}\n`;
     });
-    response += `Would you like more details about any of these? Visit belgiumcampus.ac.za for full information.`;
-    return response;
+    return r + `\nWant more detail on any of these? Just ask.`;
   }
 
-  return `I'd be happy to help you explore IT career options at Belgium Campus iTversity! You can ask me about:\n\n• Available courses and qualifications\n• Career paths in IT\n• Admission requirements\n• Which course suits your matric subjects\n• Comparing different programmes\n\nWhat would you like to know?`;
+  return `Hey! I'm here to help you find the right IT course at Belgium Campus. What do you want to know — entry requirements, career options, how the courses compare? Fire away.`;
 }
 
 // ================================================================
@@ -476,12 +458,21 @@ app.post("/api/chat", async (req, res) => {
     const userMessage = message.trim();
     console.log(`[CHAT] User: "${userMessage}"`);
 
+    // Handle greetings directly — no need to hit Gemini
+    if (GREETING_RE.test(userMessage)) {
+      const greetings = [
+        "Hey! 😊 So what are you trying to figure out — which course to study, what the entry requirements are, or what kind of IT career you'd enjoy?",
+        "Hi there! Good to have you here. Are you exploring courses for next year, or trying to figure out which IT path suits you?",
+        "Hey! What's on your mind — course requirements, career options, or something else?",
+      ];
+      return res.json({ reply: greetings[Math.floor(userMessage.length % greetings.length)], sources: [] });
+    }
+
     // Step 1: Check if the question is on-topic
     if (!isOnTopic(userMessage)) {
       console.log("[CHAT] Off-topic question detected");
       return res.json({
-        reply:
-          "I can only assist with IT career guidance based on Belgium Campus programmes. Feel free to ask me about IT courses, careers, or requirements! 😊",
+        reply: "Ah, that's a bit outside my lane — I'm only clued up on IT courses at Belgium Campus. Ask me anything about those though! 😊",
         sources: [],
       });
     }

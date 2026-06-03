@@ -52,17 +52,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Show welcome message from the AI
   addMessage(
     "ai",
-    `Welcome to **BC CourseFinder™**! 👋
+    `Hey! 👋 I'm BC CourseFinder — here to help you figure out which IT course at Belgium Campus is right for you.
 
-I'm your AI career guidance assistant for Belgium Campus iTversity programmes.
-
-I can help you with:
-• **IT career paths** and what qualifications you need
-• **Course information** — diplomas, degrees, and postgraduate options
-• **Admission requirements** — including which matric subjects you need
-• **Comparing programmes** to find the best fit for you
-
-Ask me anything, or tap a quick question below to get started!`
+Tell me a bit about yourself — what subjects are you doing, what kind of work interests you, or just ask me anything. We'll figure it out together.`
   );
 
   // Set up event listeners
