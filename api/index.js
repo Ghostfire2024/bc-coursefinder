@@ -188,7 +188,7 @@ app.post("/api/chat", async (req, res) => {
     return res.json({ reply: result.text, sources });
   } catch (err) {
     console.error("[CHAT]", err.message);
-    return res.json({ reply: "Something went wrong on my end — try sending that again!", sources: [], fallback: true });
+    return res.json({ reply: "Something went wrong on my end — try sending that again!", error: err.message, sources: [], fallback: true });
   }
 });
 
