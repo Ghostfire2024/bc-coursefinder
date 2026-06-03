@@ -9,7 +9,7 @@ const cors    = require("cors");
 const path    = require("path");
 const fs      = require("fs");
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { GoogleGenAI } = require("@google/genai");
 const bcrypt = require("bcryptjs");
 const jwt    = require("jsonwebtoken");
 
@@ -58,13 +58,9 @@ try {
 // GEMINI
 // ================================================================
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-let geminiModel = null;
+let genAI = null;
 if (GEMINI_API_KEY && GEMINI_API_KEY !== "YOUR_GEMINI_API_KEY_HERE") {
-  const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-  geminiModel = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
-    generationConfig: { temperature: 0.85, maxOutputTokens: 4096, topP: 0.95 },
-  });
+  genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 }
 
 // ================================================================
@@ -171,20 +167,25 @@ app.post("/api/chat", async (req, res) => {
     if (!message?.trim()) return res.status(400).json({ error: "Message is required." });
     const msg = message.trim();
 
-    // Always send to Gemini — let the system prompt enforce rules and tone
-    const courses = filterCourses(msg); // may be empty; formatCourses falls back to all courses
+    // Always send to Gemini — let the system prompt handle rules and tone
+    const courses = filterCourses(msg);
     const sources = courses.slice(0, 5).map((c) => c.name);
 
-    if (!geminiModel) {
+    if (!genAI) {
       return res.json({ reply: "I'm having trouble connecting right now. Try again in a moment!", sources });
     }
 
-    const ctx = formatCourses(courses);
+    // Only inject course data when something specific was asked — avoids Gemini listing all courses for greetings
+    const ctx = courses.length > 0 ? `\n\nAVAILABLE COURSE DATA:\n${formatCourses(courses)}` : "";
     const hist = history.slice(-10).map((h) => `${h.role === "user" ? "Student" : "Assistant"}: ${h.content}`).join("\n");
-    const prompt = `${SYSTEM_PROMPT}\n\nAVAILABLE COURSE DATA:\n${ctx}${hist ? `\n\nRECENT CONVERSATION:\n${hist}` : ""}\n\nSTUDENT'S MESSAGE: ${msg}\n\nReply like you're chatting with a friend — casual, warm, real. Never list your own capabilities. If they just said hello, just say hi back and ask one question to get the conversation going.`;
+    const prompt = `${SYSTEM_PROMPT}${ctx}${hist ? `\n\nRECENT CONVERSATION:\n${hist}` : ""}\n\nSTUDENT'S MESSAGE: ${msg}\n\nReply like you're chatting with a friend — casual, warm, real. Never list your own capabilities unprompted. If they just greeted you, greet them back in one sentence and ask one natural question.`;
 
-    const result = await geminiModel.generateContent(prompt);
-    return res.json({ reply: result.response.text(), sources });
+    const result = await genAI.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: prompt,
+      config: { temperature: 0.85, maxOutputTokens: 4096, topP: 0.95 },
+    });
+    return res.json({ reply: result.text, sources });
   } catch (err) {
     console.error("[CHAT]", err.message);
     return res.json({ reply: "Something went wrong on my end — try sending that again!", sources: [], fallback: true });
@@ -192,7 +193,7 @@ app.post("/api/chat", async (req, res) => {
 });
 
 app.get("/api/data",   (req, res) => res.json(courseData));
-app.get("/api/health", (req, res) => res.json({ status: "ok", courses: courseData.courses.length, gemini: !!geminiModel }));
+app.get("/api/health", (req, res) => res.json({ status: "ok", courses: courseData.courses.length, gemini: !!genAI }));
 
 app.post("/api/register", async (req, res) => {
   try {

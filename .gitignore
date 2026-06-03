@@ -26,3 +26,6 @@ Thumbs.db
 # Users data (contains hashed passwords)
 backend/users.json
 functions/users.json
+
+UserselelyAppDataLocalTempgc_temp
+*gc_temp*

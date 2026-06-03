@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "BC CourseFinder - AI Career Guidance for SA Matric Students",
   "dependencies": {
+    "@google/genai": "^2.7.0",
     "@google/generative-ai": "^0.21.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
