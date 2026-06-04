@@ -19,24 +19,14 @@ require("dotenv").config();
 const Groq = require("groq-sdk");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { createClient } = require("@supabase/supabase-js");
 
 const JWT_SECRET = process.env.JWT_SECRET || "bc-coursefinder-secret-fallback";
-const USERS_PATH = path.join(__dirname, "users.json");
 
-// ================================================================
-// USER STORE HELPERS
-// ================================================================
-function readUsers() {
-  try {
-    return JSON.parse(fs.readFileSync(USERS_PATH, "utf-8")).users;
-  } catch {
-    return [];
-  }
-}
-
-function writeUsers(users) {
-  fs.writeFileSync(USERS_PATH, JSON.stringify({ users }, null, 2));
-}
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 function verifyToken(req, res, next) {
   const auth = req.headers.authorization;
@@ -499,31 +489,23 @@ app.post("/api/chat", async (req, res) => {
 app.post("/api/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
-
     if (!name || !email || !password)
       return res.status(400).json({ error: "All fields are required." });
-
     if (password.length < 6)
       return res.status(400).json({ error: "Password must be at least 6 characters." });
 
-    const users = readUsers();
-    if (users.find((u) => u.email.toLowerCase() === email.toLowerCase()))
-      return res.status(409).json({ error: "An account with that email already exists." });
+    const normalizedEmail = email.toLowerCase().trim();
+    const { data: existing } = await supabase.from("users").select("id").eq("email", normalizedEmail).single();
+    if (existing) return res.status(409).json({ error: "An account with that email already exists." });
 
-    const passwordHash = await bcrypt.hash(password, 10);
-    const newUser = {
-      id: Date.now().toString(),
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
-      passwordHash,
-      createdAt: new Date().toISOString(),
-    };
+    const password_hash = await bcrypt.hash(password, 10);
+    const newUser = { id: Date.now().toString(), name: name.trim(), email: normalizedEmail, password_hash };
 
-    users.push(newUser);
-    writeUsers(users);
+    const { error: insertError } = await supabase.from("users").insert([newUser]);
+    if (insertError) throw insertError;
 
     const token = jwt.sign({ id: newUser.id, email: newUser.email, name: newUser.name }, JWT_SECRET, { expiresIn: "7d" });
-    console.log(`[AUTH] New user registered: ${newUser.email}`);
+    console.log(`[AUTH] Registered: ${newUser.email}`);
     res.status(201).json({ token, user: { id: newUser.id, name: newUser.name, email: newUser.email } });
   } catch (err) {
     console.error("[AUTH] Register error:", err.message);
@@ -531,28 +513,20 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-/**
- * POST /api/login
- * Body: { email, password }
- */
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-
     if (!email || !password)
       return res.status(400).json({ error: "Email and password are required." });
 
-    const users = readUsers();
-    const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
-    if (!user)
-      return res.status(401).json({ error: "Incorrect email or password." });
+    const { data: user, error } = await supabase.from("users").select("*").eq("email", email.toLowerCase().trim()).single();
+    if (error || !user) return res.status(401).json({ error: "Incorrect email or password." });
 
-    const match = await bcrypt.compare(password, user.passwordHash);
-    if (!match)
-      return res.status(401).json({ error: "Incorrect email or password." });
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) return res.status(401).json({ error: "Incorrect email or password." });
 
     const token = jwt.sign({ id: user.id, email: user.email, name: user.name }, JWT_SECRET, { expiresIn: "7d" });
-    console.log(`[AUTH] User logged in: ${user.email}`);
+    console.log(`[AUTH] Login: ${user.email}`);
     res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
   } catch (err) {
     console.error("[AUTH] Login error:", err.message);

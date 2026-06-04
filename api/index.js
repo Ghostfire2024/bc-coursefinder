@@ -1,7 +1,7 @@
 /**
  * BC CourseFinder™ — Vercel Serverless Function
  * All /api/* requests are routed here by vercel.json.
- * Users are stored in /tmp (ephemeral per cold-start on Vercel).
+ * Users are stored in Supabase (persistent PostgreSQL).
  */
 
 const express = require("express");
@@ -12,22 +12,19 @@ const fs      = require("fs");
 const Groq = require("groq-sdk");
 const bcrypt = require("bcryptjs");
 const jwt    = require("jsonwebtoken");
+const { createClient } = require("@supabase/supabase-js");
 
 const JWT_SECRET   = process.env.JWT_SECRET || "bc-coursefinder-secret-fallback";
-// Vercel functions have a read-only filesystem except /tmp
-const USERS_PATH   = "/tmp/users.json";
 const COURSES_PATH = path.join(__dirname, "courses.json");
 
 // ================================================================
-// USER STORE
+// SUPABASE CLIENT
 // ================================================================
-function readUsers() {
-  try { return JSON.parse(fs.readFileSync(USERS_PATH, "utf-8")).users; }
-  catch { return []; }
-}
-function writeUsers(users) {
-  fs.writeFileSync(USERS_PATH, JSON.stringify({ users }, null, 2));
-}
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
 function verifyToken(req, res, next) {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith("Bearer "))
@@ -208,17 +205,34 @@ app.get("/api/health", (req, res) => res.json({ status: "ok", courses: courseDat
 app.post("/api/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    if (!name||!email||!password) return res.status(400).json({ error: "All fields are required." });
+    if (!name || !email || !password) return res.status(400).json({ error: "All fields are required." });
     if (password.length < 6) return res.status(400).json({ error: "Password must be at least 6 characters." });
-    const users = readUsers();
-    if (users.find((u) => u.email.toLowerCase()===email.toLowerCase())) return res.status(409).json({ error: "An account with that email already exists." });
-    const passwordHash = await bcrypt.hash(password, 10);
-    const user = { id: Date.now().toString(), name: name.trim(), email: email.toLowerCase().trim(), passwordHash, createdAt: new Date().toISOString() };
-    users.push(user);
-    writeUsers(users);
-    const token = jwt.sign({ id: user.id, email: user.email, name: user.name }, JWT_SECRET, { expiresIn: "7d" });
-    res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email } });
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check for existing account
+    const { data: existing } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", normalizedEmail)
+      .single();
+    if (existing) return res.status(409).json({ error: "An account with that email already exists." });
+
+    const password_hash = await bcrypt.hash(password, 10);
+    const newUser = {
+      id: Date.now().toString(),
+      name: name.trim(),
+      email: normalizedEmail,
+      password_hash,
+    };
+
+    const { error: insertError } = await supabase.from("users").insert([newUser]);
+    if (insertError) throw insertError;
+
+    const token = jwt.sign({ id: newUser.id, email: newUser.email, name: newUser.name }, JWT_SECRET, { expiresIn: "7d" });
+    res.status(201).json({ token, user: { id: newUser.id, name: newUser.name, email: newUser.email } });
   } catch (err) {
+    console.error("[AUTH] Register:", err.message);
     res.status(500).json({ error: "Registration failed. Please try again." });
   }
 });
@@ -226,13 +240,23 @@ app.post("/api/register", async (req, res) => {
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email||!password) return res.status(400).json({ error: "Email and password are required." });
-    const users = readUsers();
-    const user = users.find((u) => u.email.toLowerCase()===email.toLowerCase());
-    if (!user||!(await bcrypt.compare(password, user.passwordHash))) return res.status(401).json({ error: "Incorrect email or password." });
+    if (!email || !password) return res.status(400).json({ error: "Email and password are required." });
+
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email.toLowerCase().trim())
+      .single();
+
+    if (error || !user) return res.status(401).json({ error: "Incorrect email or password." });
+
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) return res.status(401).json({ error: "Incorrect email or password." });
+
     const token = jwt.sign({ id: user.id, email: user.email, name: user.name }, JWT_SECRET, { expiresIn: "7d" });
     res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
   } catch (err) {
+    console.error("[AUTH] Login:", err.message);
     res.status(500).json({ error: "Login failed. Please try again." });
   }
 });
